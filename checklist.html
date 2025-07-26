@@ -1,0 +1,97 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>CFD 检查表：成本与风险 (CFD Checklist: Cost & Risk)</title>
+  <style>
+    body { font-family: Arial; margin: 40px; max-width: 600px; }
+    h2 { color: #333366; }
+    label, input { display: block; margin: 10px 0; }
+    input[type=number] { width: 100%; padding: 6px; }
+    button { margin-top: 15px; padding: 10px 20px; background: #336699; color: white; border: none; cursor: pointer; }
+    .result { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>🧮 总成本 (Total Cost Summary)</h2>
+  <label>点差 (Spread)（美元 USD）：<input type="number" id="spread" value="0.4"></label>
+  <label>佣金 (Commission)（美元 USD）：<input type="number" id="commission" value="0"></label>
+  <label>隔夜利息 (Swap / Overnight Fee)（美元 USD）：<input type="number" id="swap" value="0"></label>
+  <label>滑点 (Slippage)（美元 USD）：<input type="number" id="slippage" value="0.5"></label>
+  <button onclick="calculateCost()">计算成本 (Calculate Cost)</button>
+  <div class="result" id="cost_result">交易成本 (Estimated Transaction Cost): $0.90</div>
+
+  <h2>仓位与风险控制 (Risk & Position Sizing)</h2>
+  <label>账户余额 (Account Balance)（美元 USD）：<input type="number" id="balance" value="1350"></label>
+  <label>每笔交易风险 (Risk per Trade)（余额的百分比 % of balance）：<input type="number" id="risk_pct" value="0.5" step="0.1"></label>
+  <label>止损距离 (Stop-loss Distance)（美元 USD）：<input type="number" id="stop_loss" value="2"></label>
+  <label>合约规模 (Contract Size)（例如 黄金为100, e.g. 100 for gold）：<input type="number" id="contract_size" value="100"></label>
+  <label>杠杆 (Leverage)（例如100 表示1:100）：<input type="number" id="leverage" value="100"></label>
+  <button onclick="calculateRisk()">计算仓位 (Calculate Position)</button>
+  <div class="result" id="risk_result">
+    手数 (Lot Size): - &nbsp;|&nbsp; 1R (R 表示风险单位, risk unit): $-
+  </div>
+
+  
+  <h2>盈亏平衡点计算器 (Break-even Calculator)</h2>
+  <label>总成本 (Total Cost)（美元 USD）：<input type="number" id="total-cost" step="0.01"></label>
+  <label>手数 (Lot Size)：<input type="number" id="breakeven-lots" step="0.01"></label>
+  <button id="calculate-breakeven">计算最小回本点数 (Calculate Break-even Price Move)</button>
+  <div class="result">
+    每盎司需变动：<span id="breakeven-result">—</span> 美元，才能回本。
+  </div>
+
+
+  <h2>保证金/仓位 计算器 (Margin & Lot Calculator)</h2>
+  <label>金价 (Price per Ounce)（美元/盎司 USD/oz）：<input type="number" id="gold-price" step="0.01"></label>
+  <label>手数 (Lot Size)：<input type="number" id="lot-size" step="0.01"></label>
+  <label>杠杆 (Leverage)（如100 表示1:100）：<input type="number" id="leverage2" step="1"></label>
+  <button id="calculate-margin">计算保证金 (Calculate Margin)</button>
+  <div class="result">保证金 (Margin) = <span id="calculated-margin">—</span> 美元</div>
+
+<script>
+function calculateCost() {
+  const spread = parseFloat(document.getElementById("spread").value);
+  const commission = parseFloat(document.getElementById("commission").value);
+  const swap = parseFloat(document.getElementById("swap").value);
+  const slippage = parseFloat(document.getElementById("slippage").value);
+  const totalCost = (spread + commission + swap + slippage).toFixed(2);
+  document.getElementById("cost_result").innerHTML =
+    `交易成本 (Estimated Transaction Cost): $${totalCost}`;
+}
+
+function calculateRisk() {
+  const balance = parseFloat(document.getElementById("balance").value);
+  const riskPct = parseFloat(document.getElementById("risk_pct").value);
+  const stopLoss = parseFloat(document.getElementById("stop_loss").value);
+  const contractSize = parseFloat(document.getElementById("contract_size").value);
+  const leverage = parseFloat(document.getElementById("leverage").value);
+  const oneR = (balance * (riskPct / 100)).toFixed(2);
+  const dollarPerLot = contractSize * stopLoss;
+  const lotSize = (oneR / dollarPerLot).toFixed(5);
+  document.getElementById("risk_result").innerHTML =
+    `手数 (Lot Size): ${lotSize} | 1R (R 表示风险单位, risk unit): $${oneR}`;
+}
+
+document.getElementById('calculate-margin').addEventListener('click', function() {
+  const price = parseFloat(document.getElementById('gold-price').value) || 0;
+  const lots = parseFloat(document.getElementById('lot-size').value) || 0;
+  const lev = parseFloat(document.getElementById('leverage2').value) || 1;
+  const contractSize = 100;
+  const margin = price * contractSize * lots / lev;
+  document.getElementById('calculated-margin').textContent = margin.toFixed(2);
+});
+
+document.getElementById('calculate-breakeven').addEventListener('click', function() {
+  const cost = parseFloat(document.getElementById('total-cost').value) || 0;
+  const lots = parseFloat(document.getElementById('breakeven-lots').value) || 1;
+  const contractSize = 100; // 固定黄金CFD的合约规模
+  const result = cost / (contractSize * lots);
+  document.getElementById('breakeven-result').textContent = result.toFixed(4);
+});
+</script>
+
+
+</body>
+</html>
